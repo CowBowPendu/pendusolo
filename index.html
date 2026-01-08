@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>🤠 Cowboy Pendu</title>
+
+<!-- Vérification Google AdSense (optionnel) -->
+<meta name="google-site-verification" content="xxxxxxxxxxxxxxxxxxxx">
+
+<style>
+* { box-sizing: border-box; margin:0; padding:0; }
+html, body { height: 100%; }
+
+body {
+  font-family: "Segoe UI", system-ui, monospace;
+  background: linear-gradient(to bottom, #e2b46d 0%, #c68642 50%, #8b5a2b 100%);
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+body::before {
+  content:"";
+  position: fixed;
+  inset:0;
+  background: radial-gradient(circle at bottom, #3b240f 0%, transparent 60%),
+              repeating-linear-gradient(90deg, rgba(0,0,0,0.05), rgba(0,0,0,0.05) 2px, transparent 2px, transparent 6px);
+  z-index: -1;
+}
+
+#game {
+  background: rgba(255,255,255,0.95);
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  min-height: 80vh;
+}
+
+h1 { margin-top:0; font-size:2.3rem; }
+
+#menu h2 { margin-bottom:15px; }
+.difficulty-grid {
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:12px;
+}
+.card {
+  padding:18px 10px;
+  border-radius:15px;
+  cursor:pointer;
+  color:white;
+  transition:0.25s;
+  user-select:none;
+}
+.card h3 { margin:0 0 6px; }
+.card p { font-size:0.85rem; margin:0; }
+.card.facile { background:#4caf50; }
+.card.moyen { background:#ffb300; color:#333; }
+.card.difficile { background:#e53935; }
+.card:hover { transform:translateY(-6px) scale(1.05); box-shadow:0 12px 25px rgba(0,0,0,0.35); }
+
+.scrollable {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+#cowboy { font-size:4rem; margin:10px 0; }
+#mot { font-size:2rem; letter-spacing:8px; margin:20px 0; word-wrap: break-word; }
+#score, #vies { font-size:1.1rem; margin:5px; }
+#lettres { display:flex; flex-wrap: wrap; justify-content: center; max-height:200px; overflow-y:auto; margin-bottom:10px; }
+#lettres button {
+  width:36px; height:36px; margin:4px; border:none; border-radius:8px;
+  background:#eee; cursor:pointer; font-size:1rem; transition:0.2s;
+}
+#lettres button:hover:not(:disabled) { background:#8b5a2b; color:white; transform:scale(1.1); }
+#lettres button:disabled { background:#ddd; }
+#info { margin-top:15px; min-height:1.5em; font-size:1.1rem; }
+.correct { color:#2e7d32; }
+.incorrect { color:#c62828; }
+
+#ad { margin:15px 0; flex-shrink:0; }
+
+#privacy {
+  background: rgba(255,255,255,0.95);
+  padding: 5px 10px;
+  font-size: 0.85rem;
+  color: #555;
+  text-align:center;
+  border-top: 1px solid #ccc;
+}
+#privacy a { color:#2e7d32; text-decoration:none; }
+#privacy a:hover { text-decoration:underline; }
+</style>
+
+<!-- Script principal Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9912335877113055"
+     crossorigin="anonymous"></script>
+</head>
+
+<body>
+<div id="game">
+
+<h1>🤠 Cowboy Pendu</h1>
+
+<!-- Menu visuel des difficultés -->
+<div id="menu">
+  <h2>Choisis ta mission</h2>
+  <div class="difficulty-grid">
+    <div class="card facile" onclick="demarrer('1')">
+      <h3>🤠 Facile</h3>
+      <p>10 vies<br>Mots courts</p>
+    </div>
+    <div class="card moyen" onclick="demarrer('2')">
+      <h3>😎 Moyen</h3>
+      <p>7 vies<br>Mots moyens</p>
+    </div>
+    <div class="card difficile" onclick="demarrer('3')">
+      <h3>💀 Difficile</h3>
+      <p>5 vies<br>Mots longs</p>
+    </div>
+  </div>
+</div>
+
+<div class="scrollable">
+  <div id="score">Score : 0</div>
+  <div id="vies">Vies : 0</div>
+
+  <!-- Bloc AdSense responsive -->
+  <div id="ad">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-9912335877113055"
+         data-ad-slot="2629891478"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  </div>
+
+  <div id="cowboy">🤠</div>
+  <div id="mot"></div>
+  <div id="lettres"></div>
+  <div id="info"></div>
+</div>
+
+<!-- Privacy -->
+<div id="privacy">
+💡 <a href="privacy.html" target="_blank">Politique de confidentialité</a> - Cliquez ici pour en savoir plus.
+</div>
+
+<script>
+// ----------------------------
+// Mots
+const mots_faciles = ["chat","chien","pomme","livre","maison","soleil","lune","eau","arbre","fleur","porte","voiture","table","chaise","plante","stylo","bureau","fenetre","ciel","nuage"];
+const mots_moyens = ["ordinateur","terminal","reseau","fichier","application","interface","matrice","vecteur","musique","histoire","journal","bibliotheque","fenetre","projet","science","technologie","electronique","langage","developpement","programmation","internet"];
+const mots_difficiles = ["cryptographie","algorithmie","optimisation","intelligence","artificielle","microelectronique","astronautique","biotechnologie","psychologie","philosophie","mathematique","environnement","technologie","universite","physique","chimie","robotique","nanotechnologie","cybersecurite","data"];
+const cowboyStages = ["🤠","🤠","🤠","😰","😱"];
+
+let motMystere="", motPublic="", lettresUtilisees=[];
+let vies=0, viesMax=0, score=0, niveau="1";
+
+// ----------------------------
+// Démarrer partie
+function demarrer(n){
+  niveau=n;
+  document.getElementById("menu").style.display="none";
+  choisirMot();
+}
+
+function choisirMot(){
+  let liste = niveau==="1"?mots_faciles:niveau==="2"?mots_moyens:mots_difficiles;
+  motMystere = liste[Math.floor(Math.random()*liste.length)];
+  motPublic = "_".repeat(motMystere.length);
+  lettresUtilisees=[];
+  vies = niveau==="1"?10:niveau==="2"?7:5;
+  viesMax=vies;
+  afficher();
+}
+
+function afficher(){
+  document.getElementById("mot").innerHTML = motPublic.split("").join(" ");
+  document.getElementById("vies").textContent = "Vies : "+vies;
+  document.getElementById("score").textContent = "Score : "+score;
+  let stage = Math.floor((1 - vies/viesMax)*(cowboyStages.length-1));
+  document.getElementById("cowboy").textContent = cowboyStages[stage];
+
+  let h="";
+  for(let i=65;i<=90;i++){
+    let l=String.fromCharCode(i).toLowerCase();
+    h+=`<button onclick="jouer('${l}')" ${lettresUtilisees.includes(l)?"disabled":""}>${l}</button>`;
+  }
+  document.getElementById("lettres").innerHTML=h;
+}
+
+function jouer(l){
+  lettresUtilisees.push(l);
+  if(motMystere.includes(l)){
+    motPublic = motMystere.split("").map((c,i)=>l===c?c:motPublic[i]).join("");
+    document.getElementById("info").textContent = "✅ Bien joué !";
+    document.getElementById("info").className = "correct";
+    if(motPublic===motMystere){
+      score++;
+      document.getElementById("info").textContent = "🎉 Bravo ! Le mot était : " + motMystere;
+      setTimeout(choisirMot,1200);
+    }
+  } else {
+    vies--;
+    document.getElementById("info").textContent = "❌ Mauvaise lettre !";
+    document.getElementById("info").className = "incorrect";
+    if(vies===0){
+      document.getElementById("info").textContent = "💀 Le cowboy est capturé ! Le mot était : " + motMystere;
+      setTimeout(choisirMot,1200);
+    }
+  }
+  afficher();
+}
+</script>
+
+</div>
+</body>
+</html>
